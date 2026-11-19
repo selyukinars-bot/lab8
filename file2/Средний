@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учёт расходов</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Учёт расходов</h1>
+
+        <div class="form">
+            <input type="text" id="category" placeholder="Категория">
+
+            <input type="number" id="amount"
+                   placeholder="Сумма" min="0.01" step="0.01">
+
+            <input type="date" id="date">
+
+            <button id="addBtn">Добавить расход</button>
+        </div>
+
+        <h2>Общий расход: <span id="total">0</span> ₸</h2>
+
+        <h3>История операций</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Категория</th>
+                    <th>Сумма</th>
+                    <th>Дата</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody id="expenseList"></tbody>
+        </table>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+-----------------------------------
+
+body {
+    font-family: Arial, sans-serif;
+    background: #eef2f7;
+    margin: 0;
+    padding: 40px 15px;
+}
+
+.container {
+    max-width: 750px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px #0002;
+}
+
+h1, h2, h3 {
+    text-align: center;
+    color: #263445;
+}
+
+.form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    min-width: 130px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+button {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #2878d0;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #155ca8;
+}
+
+h2 {
+    margin-top: 30px;
+    color: #16834a;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+th {
+    background: #2878d0;
+    color: white;
+}
+
+.delete-btn {
+    background: #dc3545;
+}
+
+.delete-btn:hover {
+    background: #b02a37;
+}
+
+@media (max-width: 550px) {
+    .container {
+        padding: 15px;
+        overflow-x: auto;
+    }
+
+    table {
+        min-width: 500px;
+    }
+}
+------------------------------------
+
+const categoryInput = document.getElementById("category");
+const amountInput = document.getElementById("amount");
+const dateInput = document.getElementById("date");
+
+const addBtn = document.getElementById("addBtn");
+const expenseList = document.getElementById("expenseList");
+const totalElement = document.getElementById("total");
+
+// Загружаем сохранённые расходы
+let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+
+// Сохраняем данные
+function saveExpenses() {
+    localStorage.setItem("expenses", JSON.stringify(expenses));
+}
+
+// Отображаем расходы
+function renderExpenses() {
+    expenseList.innerHTML = "";
+
+    let total = 0;
+
+    expenses.forEach((expense, index) => {
+        total += expense.amount;
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        `;
+
+        row.cells[0].textContent = expense.category;
+        row.cells[1].textContent = expense.amount + " ₸";
+        row.cells[2].textContent = expense.date;
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Удалить";
+        deleteBtn.className = "delete-btn";
+
+        deleteBtn.addEventListener("click", () => {
+            expenses.splice(index, 1);
+            saveExpenses();
+            renderExpenses();
+        });
+
+        row.cells[3].append(deleteBtn);
+        expenseList.append(row);
+    });
+
+    totalElement.textContent = total.toLocaleString("ru-RU");
+}
+
+// Добавляем новый расход
+addBtn.addEventListener("click", () => {
+    const category = categoryInput.value.trim();
+    const amount = Number(amountInput.value);
+    const date = dateInput.value;
+
+    if (!category || !date || !Number.isFinite(amount) || amount <= 0) {
+        alert("Заполните все поля правильно!");
+        return;
+    }
+
+    const expense = {
+        category: category,
+        amount: amount,
+        date: date
+    };
+
+    expenses.push(expense);
+
+    saveExpenses();
+    renderExpenses();
+
+    categoryInput.value = "";
+    amountInput.value = "";
+    dateInput.value = "";
+});
+
+// Показываем данные при открытии страницы
+renderExpenses();
