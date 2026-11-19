@@ -1,0 +1,229 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список покупок</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Мой список покупок</h1>
+
+        <div class="input-group">
+            <input type="text" id="productInput" placeholder="Введите товар">
+            <button id="addButton">Добавить</button>
+        </div>
+
+        <ul id="productList"></ul>
+
+        <button id="clearButton" class="clear-button">
+            Очистить список
+        </button>
+
+        <p id="counter">Количество товаров: 0</p>
+    </div>
+</body>
+</html>
+
+---------------------------------------
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    padding: 30px;
+}
+
+.container {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 25px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    background: #2878d0;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #195da8;
+}
+
+ul {
+    padding: 0;
+    list-style: none;
+}
+
+li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    margin-top: 10px;
+    background: #f1f3f5;
+    border-radius: 6px;
+}
+
+li span {
+    overflow-wrap: anywhere;
+}
+
+.delete-button {
+    background: #dc3545;
+}
+
+.delete-button:hover {
+    background: #b52a37;
+}
+
+.clear-button {
+    width: 100%;
+    margin-top: 10px;
+    background: #555;
+}
+
+#counter {
+    text-align: center;
+    color: #555;
+}
+
+-------------------------------------
+
+const input = document.querySelector("#productInput");
+const addButton = document.querySelector("#addButton");
+const productList = document.querySelector("#productList");
+const clearButton = document.querySelector("#clearButton");
+const counter = document.querySelector("#counter");
+
+const STORAGE_KEY = "shopping_list";
+
+let products = [];
+
+// Загрузка сохранённых данных
+function loadProducts() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (saved) {
+            const parsed = JSON.parse(saved);
+
+            products = Array.isArray(parsed)
+                ? parsed.filter(item => typeof item === "string")
+                : [];
+        }
+    } catch (error) {
+        products = [];
+        console.error("Ошибка загрузки данных:", error);
+    }
+}
+
+// Сохранение данных
+function saveProducts() {
+    try {
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(products)
+        );
+    } catch (error) {
+        alert("Не удалось сохранить данные!");
+        console.error(error);
+    }
+}
+
+// Отображение товаров
+function renderProducts() {
+    productList.replaceChildren();
+
+    products.forEach((product, index) => {
+        const li = document.createElement("li");
+
+        const span = document.createElement("span");
+        span.textContent = product;
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Удалить";
+        deleteButton.className = "delete-button";
+
+        deleteButton.addEventListener("click", () => {
+            products.splice(index, 1);
+            saveProducts();
+            renderProducts();
+        });
+
+        li.append(span, deleteButton);
+        productList.append(li);
+    });
+
+    counter.textContent =
+        "Количество товаров: " + products.length;
+}
+
+// Добавление товара
+function addProduct() {
+    const product = input.value.trim();
+
+    if (product === "") {
+        alert("Введите название товара!");
+        return;
+    }
+
+    products.push(product);
+
+    input.value = "";
+
+    saveProducts();
+    renderProducts();
+}
+
+// Обработчики событий
+addButton.addEventListener("click", addProduct);
+
+input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+        addProduct();
+    }
+});
+
+// Очистка списка
+clearButton.addEventListener("click", () => {
+    products = [];
+    localStorage.removeItem(STORAGE_KEY);
+    renderProducts();
+});
+
+// Запуск приложения
+loadProducts();
+renderProducts();
