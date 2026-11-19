@@ -1,0 +1,444 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мастер заполнения заявки</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>Заполнение заявки</h1>
+    <p class="subtitle">Заполните все три шага</p>
+
+    <div class="progress">
+        <div id="progressBar"></div>
+    </div>
+
+    <p id="stepTitle">Шаг 1 из 3: Личные данные</p>
+
+    <form id="applicationForm">
+
+        <!-- Шаг 1 -->
+        <section class="step" id="step1">
+            <h2>Личные данные</h2>
+
+            <label>ФИО:</label>
+            <input type="text" id="fullName"
+                   placeholder="Введите ваше ФИО" required>
+
+            <label>Электронная почта:</label>
+            <input type="email" id="email"
+                   placeholder="example@mail.com" required>
+
+            <label>Номер телефона:</label>
+            <input type="tel" id="phone"
+                   placeholder="+7 777 123 4567" required>
+        </section>
+
+        <!-- Шаг 2 -->
+        <section class="step" id="step2" hidden>
+            <h2>Информация о заявке</h2>
+
+            <label>Категория:</label>
+            <select id="category" required>
+                <option value="">Выберите категорию</option>
+                <option value="Обучение">Обучение</option>
+                <option value="Техническая помощь">Техническая помощь</option>
+                <option value="Консультация">Консультация</option>
+                <option value="Другое">Другое</option>
+            </select>
+
+            <label>Тема заявки:</label>
+            <input type="text" id="subject"
+                   placeholder="Введите тему" required>
+
+            <label>Описание:</label>
+            <textarea id="description"
+                      placeholder="Опишите вашу заявку"
+                      rows="5" required></textarea>
+        </section>
+
+        <!-- Шаг 3 -->
+        <section class="step" id="step3" hidden>
+            <h2>Проверка заявки</h2>
+            <p>Проверьте введённые данные перед отправкой.</p>
+
+            <div id="summary"></div>
+        </section>
+
+        <div class="buttons">
+            <button type="button" id="backBtn" hidden>
+                Назад
+            </button>
+
+            <button type="button" id="nextBtn">
+                Далее
+            </button>
+
+            <button type="button" id="submitBtn" hidden>
+                Отправить заявку
+            </button>
+        </div>
+    </form>
+
+    <p id="message"></p>
+
+    <h2>Отправленные заявки</h2>
+    <div id="applicationsList"></div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
+----------------------------
+
+body {
+    font-family: Arial, sans-serif;
+    background: #eef2f7;
+    margin: 0;
+    padding: 40px 15px;
+}
+
+.container {
+    max-width: 550px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 14px;
+    box-shadow: 0 5px 20px #0002;
+}
+
+h1, h2 {
+    text-align: center;
+    color: #263445;
+}
+
+.subtitle {
+    text-align: center;
+    color: #777;
+}
+
+#stepTitle {
+    text-align: center;
+    font-weight: bold;
+    color: #2878d0;
+}
+
+.progress {
+    height: 9px;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#progressBar {
+    width: 33.33%;
+    height: 100%;
+    background: #2878d0;
+    transition: width 0.3s;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 7px;
+    font-weight: bold;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    box-sizing: border-box;
+    font-size: 15px;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+button {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 7px;
+    background: #2878d0;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:hover {
+    background: #155ca8;
+}
+
+#backBtn {
+    background: #777;
+}
+
+#submitBtn {
+    background: #16834a;
+}
+
+#message {
+    text-align: center;
+    color: #16834a;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+.application {
+    background: #f1f5fa;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 7px;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 500px) {
+    .container {
+        padding: 18px;
+    }
+
+    button {
+        padding: 10px;
+    }
+}
+--------------------------------------
+
+const form = document.getElementById("applicationForm");
+
+const steps = [
+    document.getElementById("step1"),
+    document.getElementById("step2"),
+    document.getElementById("step3")
+];
+
+const nextBtn = document.getElementById("nextBtn");
+const backBtn = document.getElementById("backBtn");
+const submitBtn = document.getElementById("submitBtn");
+
+const progressBar = document.getElementById("progressBar");
+const stepTitle = document.getElementById("stepTitle");
+const summary = document.getElementById("summary");
+const message = document.getElementById("message");
+const applicationsList = document.getElementById("applicationsList");
+
+let currentStep = 0;
+
+// Получаем все поля формы
+const fields = [
+    "fullName",
+    "email",
+    "phone",
+    "category",
+    "subject",
+    "description"
+];
+
+// Загружаем черновик из sessionStorage
+const draft = JSON.parse(
+    sessionStorage.getItem("draft")
+) || {};
+
+// Восстанавливаем введённые данные
+fields.forEach(id => {
+    const element = document.getElementById(id);
+
+    if (draft[id] !== undefined) {
+        element.value = draft[id];
+    }
+
+    // Сохраняем изменения в черновик
+    element.addEventListener("input", saveDraft);
+    element.addEventListener("change", saveDraft);
+});
+
+// Сохранение черновика
+function saveDraft() {
+    const data = {};
+
+    fields.forEach(id => {
+        data[id] = document.getElementById(id).value;
+    });
+
+    sessionStorage.setItem("draft", JSON.stringify(data));
+}
+
+// Получение данных формы
+function getFormData() {
+    const data = {};
+
+    fields.forEach(id => {
+        data[id] = document.getElementById(id).value.trim();
+    });
+
+    return data;
+}
+
+// Проверка текущего шага
+function validateStep() {
+    const inputs = steps[currentStep].querySelectorAll(
+        "input, select, textarea"
+    );
+
+    for (const input of inputs) {
+        if (!input.checkValidity()) {
+            input.reportValidity();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Отображение нужного шага
+function showStep() {
+    steps.forEach((step, index) => {
+        step.hidden = index !== currentStep;
+    });
+
+    backBtn.hidden = currentStep === 0;
+    nextBtn.hidden = currentStep === 2;
+    submitBtn.hidden = currentStep !== 2;
+
+    progressBar.style.width =
+        ((currentStep + 1) / 3 * 100) + "%";
+
+    stepTitle.textContent =
+        `Шаг ${currentStep + 1} из 3`;
+
+    if (currentStep === 0) {
+        stepTitle.textContent += ": Личные данные";
+    } else if (currentStep === 1) {
+        stepTitle.textContent += ": Информация о заявке";
+    } else {
+        stepTitle.textContent += ": Проверка и отправка";
+        showSummary();
+    }
+}
+
+// Переход вперёд
+nextBtn.addEventListener("click", () => {
+    if (!validateStep()) return;
+
+    saveDraft();
+
+    currentStep++;
+    showStep();
+});
+
+// Переход назад
+backBtn.addEventListener("click", () => {
+    currentStep--;
+    showStep();
+});
+
+// Формирование итоговой информации
+function showSummary() {
+    const data = getFormData();
+
+    const labels = {
+        fullName: "ФИО",
+        email: "Электронная почта",
+        phone: "Телефон",
+        category: "Категория",
+        subject: "Тема заявки",
+        description: "Описание"
+    };
+
+    summary.innerHTML = "";
+
+    fields.forEach(id => {
+        const paragraph = document.createElement("p");
+        const strong = document.createElement("strong");
+
+        strong.textContent = labels[id] + ": ";
+        paragraph.append(strong, document.createTextNode(data[id]));
+
+        summary.append(paragraph);
+    });
+}
+
+// Получаем ранее отправленные заявки
+function getApplications() {
+    return JSON.parse(
+        localStorage.getItem("applications")
+    ) || [];
+}
+
+// Отображаем отправленные заявки
+function renderApplications() {
+    applicationsList.innerHTML = "";
+
+    const applications = getApplications();
+
+    applications.forEach((application, index) => {
+        const card = document.createElement("div");
+        card.className = "application";
+
+        const title = document.createElement("strong");
+        title.textContent = `${index + 1}. ${application.subject}`;
+
+        const info = document.createElement("p");
+        info.textContent =
+            `Заявитель: ${application.fullName} | ` +
+            `Категория: ${application.category}`;
+
+        const date = document.createElement("small");
+        date.textContent = "Отправлено: " + application.date;
+
+        card.append(title, info, date);
+        applicationsList.append(card);
+    });
+
+    if (applications.length === 0) {
+        applicationsList.textContent = "Пока нет отправленных заявок.";
+    }
+}
+
+// Отправка окончательной заявки
+submitBtn.addEventListener("click", () => {
+    const data = getFormData();
+
+    // Сохраняем окончательную заявку
+    const applications = getApplications();
+
+    applications.push({
+        ...data,
+        date: new Date().toLocaleString("ru-RU")
+    });
+
+    localStorage.setItem(
+        "applications",
+        JSON.stringify(applications)
+    );
+
+    // Удаляем временный черновик
+    sessionStorage.removeItem("draft");
+
+    // Очищаем форму
+    form.reset();
+
+    currentStep = 0;
+    showStep();
+
+    message.textContent = "Заявка успешно отправлена!";
+
+    renderApplications();
+});
+
+// Начальная загрузка
+showStep();
+renderApplications();
